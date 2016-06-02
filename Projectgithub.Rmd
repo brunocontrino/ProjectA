@@ -1,0 +1,428 @@
+---
+title: "Project"
+author: "Bruno Contrino"
+date: "2 June 2016"
+output: html_document
+---
+**Code written In total for BF**
+
+The various functions presented will be in order of when they are needed. For clarity on outputs and general flow I will use the real data example of Kuiper et al. Some of the outputs will be directly comparable to their published results. Please note the ares which the functoins are referenced to are where they are described in the paper and not where their results are explained.
+
+Below are the input parameter values I will use: 
+
+```{r examplesetup, echo = FALSE}
+
+beta0<- 0
+beta1<- c(0.090,0.140,1.090,1.781)
+var1<- c(0.029,0.054,0.093,0.179)
+var1<- var1^2
+pi0<- rep(1/3,3)
+
+```
+
+##### Computing Prior Variance: *prior.var(beta,sigma, percent = 99)*
+
+This function computes the prior variance, The literature (Kuiper et al and others) suggest that the prior variance be 'vague/non-informative such that is, such that it has little influence on the results. But, it should not be too vague, because then $H_{0}$ will receive the highest support also when it is not true. This is known as the Lindley paradox (Lindley 1957). Grounding the prior variance on the data avoids having too vague priors (Berger and Pericchi 2004, 1996).' 
+
+The method used by Kuiper et al is propesed by Klugkist, Laudy, and Hoijtink (2005) and is as follows:
+
+- Calculate the 99% confidence intervals of the observed mean and standard deviation. 
+
+- Choose the bound which will maximise the difference from the prior mean ( zero in out case).
+
+- Use this to set the prior variance. 
+
+
+```{r priorvar}
+
+## variance of prior 
+## REFERENCE : Combining Statistical evidence from several Studies , Kuiper et al, page 9 (69-70) and Figure 2.
+#beta  = vector of parameter estimates where beta[i] is for ith study 
+#sigma  = vector of standard errors where sigma[i] is for ith study 
+
+prior.var<- function(beta,sigma, percent = 99){
+  #setup
+  data<- matrix(0, ncol = 2 , nrow = length(beta))
+  percent<- (percent / 100)
+  percent<- percent + (1-percent)/2
+  multiplier<- qnorm(percent)
+  # get min/max
+  data[,1]<- beta - sigma*multiplier
+  data[,2]<- beta + sigma*multiplier
+  
+  bounds<- abs(data)
+  output <- apply(X = bounds,MARGIN = 1,max)
+  output <- ((output / multiplier))^2 
+  output
+}
+
+
+```
+
+**Summary of input / output**
+
+__Inputs__
+
+- beta: The observed mean of the data / studies.
+
+- sigma: The observed standard deviation of the data / studies.
+
+- percent = 99: This sets the confidence intervals used to calculate the prior variances. The default is a 99% C.I.
+
+__Outputs__
+
+The output consists of a vector which has length as the number of studies. The prior vriances are ordered in this vector such that position $i$ represents the prior variance of study $i$. 
+
+**Example Output**
+
+```{r expriorvar, echo = FALSE}
+
+var0<- prior.var(beta1,sigma = sqrt(var1))
+var0
+
+```
+
+After running this function we have the parameters of the unconstrained prior $P(\beta_{1}) \textasciitilde \mathcal{N}(\beta_{0} , \sigma_{0}^2)$
+
+$$
+\\
+$$
+
+
+####Calculating Unconstrained Posterior Parameters: *u.post.param(prior.beta,prior.var,data.beta,data.var)*
+
+The following function is used to calculate the posterior means and variations for the observed data. The following equations are used in order to do this: NEED TO ADD STUDY INDEX (DIFFERENT TO PAPER BUT MORE CLEAR)
+
+$$
+\beta^{'} = \frac{\frac{\hat{\beta}}{\hat{\sigma}^{2}}+\frac{\beta_{0}}{\sigma^{2}_{0}}}{\frac{1}{\hat{\sigma}^{2}}+\frac{1}{\sigma^{2}_{0}}} , \sigma^{'} = \frac{1}{\frac{1}{\hat{\sigma}^{2}} + \frac{1}{\sigma^{2}_{0}}}
+$$
+
+
+```{r upostparam}
+
+## Unconstrained posterior parameters 
+## REFERENCE : Combining Statistical evidence from several Studies , Kuiper et al, page 9 (70) .
+
+
+u.post.param<- function(prior.beta,prior.var,data.beta,data.var){
+
+  beta.var<- 1/ ((1/prior.var)  + (1/data.var)) 
+  beta.tilda<-(prior.beta * (1/prior.var)  + data.beta * (1/data.var))*beta.var
+  
+  out<- rbind(beta.tilda,beta.var)
+  rownames(out)<- c("u.beta.post","u.var.post")
+  out
+}
+
+```
+
+
+**Summary of input / output**
+
+__Inputs__
+
+prior.beta: This is the prior mean $\beta_{0}$ which I set to 0. 
+
+prior.var: Takes the prior variances.This is the output produced from the prior.var function.
+
+data.beta: This is the observed means of the studies. 
+
+data.var: This is the observed variances of the studies. 
+
+__Outputs__
+
+The output of this function is a $2 \times T$ matrix where T is the number of studies. 
+The first row consists of the unconstrained posterior model mean for each study $t \in T$.
+The second row consists of the unconstrained posterior model variance for each study $t \in T$.
+
+**Example Output**
+
+
+```{r exupostvar, echo = FALSE}
+
+u.post.variables <- u.post.param(prior.beta = beta0,prior.var = var0,data.beta = beta1,data.var = var1) 
+u.post.variables
+u.post.variables <- u.post.param(beta0,var0,beta1,var1) 
+beta1.post<- u.post.variables[1,]
+var1.post<- u.post.variables[2,]
+```
+
+$$
+\\
+$$
+
+
+####Getting Proportions of Unconstrained Prior: *sampl.data2(n,prior.mean,posterior.mean,prior.sd,posterior.sd,hypothesis = 1)*
+
+The following function gets the proportions of the unconstrained posterior ($f_{m}$) and the proportions of the unconstrained prior ($c_{m}$). These are required to calculate $BF_{mu}, m \in \{ >,<\}$ which is the bayes factor for a constrained hypothesis e.g $H_{>}$ with respect to the unconstrained hypothesis.
+
+```{r sampldata}
+## Unconstrained posterior proportions and Unconstrained prior proportions 
+## REFERENCE : Combining Statistical evidence from several Studies , Kuiper et al, page 72.
+sampl.data2<- function(n,prior.mean,posterior.mean,prior.sd,posterior.sd,hypothesis = 1){
+  if(hypothesis == "1"){
+    "%a%" = function(x,y){x > y}
+  } else { 
+    "%a%" = function(x,y) {
+      x < y
+    }
+  }
+  
+  n.post<- length(posterior.mean)
+  Cm<- Fm<- names.vec<- rep(0,n.post)
+
+  Cm[]<- 0.5
+  
+  for(i in 1:n.post){
+    Fm[i]<- mean(ifelse(rnorm(n,posterior.mean[i],posterior.sd[i]) %a% prior.mean , 1 , 0))
+    
+    names.vec[i]<- paste("prob.post",i,sep = "")
+    
+  }
+  
+  out<- matrix(0,ncol = (n.post), nrow = 2)
+  rownames(out)<- c("Fm","Cm")
+  colnames(out)<- names.vec
+  out[2,]<- Cm
+  out[1,]<- Fm
+  out
+}
+
+```
+
+**Summary of input / output**
+
+
+__Inputs__
+
+
+- n: Number of samples taken when running rnorm.
+
+- prior.mean : Vctor of prior means.
+
+- posterior.mean : vector of posterior means.
+
+- prior.sd: Vector of prior standard deviations.
+
+- posterior.sd: Vector of posterior standard deviations. 
+
+- hypothesis = 1: This acts as a switch for the hypothesis sampled, can be changed to any other number and hypothesis 2 will be sampled instead. It isn't a crucial input and is more for flexibility and completeness. The analysis will work if this is never changed.
+
+__Outputs__
+
+The output of this function is a $2 \times T$ matrix where T is the number of studies. 
+The first row consists of the unconstrained posterior model proportions for each study $t \in T$.
+The second row consists of the unconstrained prior model proportions for each study $t \in T$.
+
+**Example Output**
+
+```{r exsmpldata, echo = FALSE}
+temp.proportions<- sampl.data2(n = 100000 ,prior.mean =  0, posterior.mean = beta1.post, prior.sd = sqrt(var0) , posterior.sd = sqrt(var1.post),hypothesis = 1)
+temp.proportions
+```
+
+$$
+\\
+$$
+
+
+####Calculating the unconstrained Bayes factors $H_{mu}$: *BF.mu.func(prior.mean,posterior.mean,sd.prior,sd.posterior,n = 1000)*
+
+This function utilises the $c_{m}$ and $f_{m}$ produced in the previous function in order to calculate $BF_{mu} = \frac{f_{m}}{c_{m}}$ for $m \in \{ >, < \}$.
+
+To $BF_{0u}$, the following formula is used in the function: $BF_{0u} = \frac{P(\beta_{1} = 0 |y )}{P(\beta_{1} = 0)}$ so one only has to compute the unconstrained prior and posterior at $beta_{1} = 0$. 
+
+
+```{r bfmu}
+## Calculating unconstrained Bayes Factors. 
+## REFERENCE : Combining Statistical evidence from several Studies , Kuiper et al, page 72.
+
+BF.mu.func<- function(prior.mean,posterior.mean,sd.prior,sd.posterior,n = 1000){
+  #BF_0u NULL
+  n.studies<- length(posterior.mean)
+  name.vec<- rep(NA,n.studies)
+  for(i in 1:n.studies){
+    name.vec[i]<- paste0("study",i)
+  }
+  BF.0u<- rep(0,n.studies)
+  for( i in 1:n.studies){
+    BF.0u[i]<- dnorm(prior.mean,posterior.mean[i],sd.posterior[i])/dnorm(prior.mean,prior.mean,sd.prior[i]) 
+  }
+  
+  ## Run sampler for BF.1u
+  temp.proportions<- sampl.data2(n,prior.mean,posterior.mean,sd.prior,sd.posterior,hypothesis = 1)
+  # BF_1u in the case m = > 
+  
+  ### CHECK 
+  BF.1u<- temp.proportions[1,] /  temp.proportions[2,]
+  
+  # BF.2u in the case m = <
+  
+  BF.2u<- (1 - temp.proportions[1,]) / temp.proportions[2,]
+  ### CHECK 
+ 
+  out<- rbind(BF.0u,BF.1u,BF.2u)
+  rownames(out)<- c("H:0","H:>","H:<")
+  colnames(out)<- name.vec
+  out
+}
+
+```
+
+**Summary of input / output**
+
+__Inputs__
+
+- prior.mean: vector of prior means.
+
+- posterior.mean: vector of posterior means.
+
+- sd.prior: vector of prior standard deviations.
+
+- sd.posterior: vector of posterior standard deviations.
+
+- n = 1000 : Number of random samples taken (used in sampl.data2).  
+
+__Outputs__
+
+The output of this function is a $3 \times T$ matrix where T is the number of studies. 
+
+The first row consists of the Bayes Factor $BF_{0u}$ for the hypothesis $H_{0}$ and the unconstrained model for each study $t \in T$.
+
+The second row row consists of the Bayes Factor $BF_{>u}$ for the hypothesis $H_{>}$ and the unconstrained model for each study $t \in T$.
+
+The third row consists of the Bayes Factor $BF_{<u}$ for the hypothesis $H_{<}$ and the unconstrained model for each study $t \in T$.
+
+**Example Output**
+
+```{r exbfmu, echo = FALSE}
+BF.mu<- BF.mu.func(prior.mean =  0, posterior.mean = beta1.post,sd.prior = sqrt(var0) , sd.posterior = sqrt(var1.post),n = 100000 )
+BF.mu
+```
+
+
+####Calculating Posterior Model Probabilities (PMP) from Prior Model Probabilities
+
+This section will consist of two functions: **pi0.to.1** and **pi.0m.t.func** 
+
+**pi0.to.1**
+
+This function calculates a prior model probability ($\pi^{1}_{m}$)for a hypothesis $H_{m}$. Where $\pi^{1}_{m}$ gives the relative support for $H_{m}$ in a finite set of hypotheses.
+
+The function does the following: 
+
+$$
+\pi^{1}_{m} = \frac{\pi^{0}_{m} BF_{mu}}{\pi^{0}_{0} BF_{0u} + \pi^{0}_{>} BF_{>u} + \pi^{0}_{<} BF_{<u}}
+$$
+
+
+```{r expito1}
+### Posterior Model Probabilities for Hm  = pi1
+# single update 
+pi0.to.1<- function(pi0,BF){
+  # Pi0 are the prior Model Probabilities and BF are the Bayes factors BF.mu for a single study
+  # Careful not to use the whole matrix of BF's here !
+  
+  out<- (pi0*BF) / sum(pi0*BF) 
+  out
+}
+```
+
+**Summary of input / output**
+
+__Inputs__
+
+- pi0: Pi0 are the prior Model Probabilities.
+
+- BF:Bayes factors for a single study across all hypotheses.
+
+__Outputs__
+
+The output for this function is a vector of length 3, which is the PMP for the given inputs. 
+
+**Example Output**
+
+```{r expito1cd,echo = FALSE}
+pi0.to.1(pi0,BF.mu[,1])
+```
+
+**pi.0m.t.func(pi0,BF.mu)**
+
+This function does the updating evidence step of the method. It implements the following: 
+
+$$
+\pi^{0}_{t,m} = \pi^{1}_{t -1,m} for t = 2, ... ,T
+$$
+
+And then uses the **pi0.to.1** to update and calculate the PMP values for the set of studies.
+
+```{r exupdate}
+## Updating evidence : 
+# step 1 find pi.0m.t where t is the study number
+
+pi.0m.t.func<- function(pi0,BF.mu){
+  pmp.t<- BF.mu
+  pmp.t[,1]<- pi0.to.1(pi0,BF.mu[,1]) 
+  
+  for(i in 2:ncol(BF.mu)){
+    pmp.t[,i]<- pi0.to.1(pmp.t[,i-1],BF.mu[,i])
+  }
+  names.vec<- rep(0, ncol(BF.mu))
+  for(i in 1:ncol(BF.mu)){
+    names.vec[i]<- paste0("PMP", i )
+  }
+  colnames(pmp.t)<- names.vec
+  pmp.t 
+}
+
+```
+**Summary of input / output**
+
+__Inputs__
+
+- pi0: Pi0 are the prior Model Probabilities.
+
+- BF.mu: Matrix of Bayes Factors for the unconstrained model for each hypothesis. 
+
+__Outputs__
+
+This outputs the matrix of PMP values and is the final output of the wrapper function:
+
+**Example Output**
+
+```{r expmpfin , echo = FALSE}
+pi.0m.t.func(pi0,BF.mu)
+```
+
+
+####Wrapper Function: *PMP.func(beta1, var1,pi0,beta0, sd.mult = 1)*
+
+The following function is a wrapper for all of the above. It implements the method as seen in Kuiper et al.
+
+**Summary of input / output**
+
+__Inputs__
+
+- beta1: The predicted means of the data. 
+- var1 : The predicted variances of the data.
+- pi0: The prior model probablilities, default will be to give each hypothesis equal probability so $\pi_{m}^{0} = \frac{1}{3} , m \in \{0 ,>,< \}$ 
+- beta0: This is the prior mean, which has been set to 0 throughout. 
+- sd.mult = 1 : A multiplier of the prior variance, used in Kuiper et al to test the method. Default set at 1.
+
+```{r PMP}
+
+PMP.func<- function(beta1, var1,pi0,beta0, sd.mult = 1){
+  var0<- prior.var(beta1,sigma = sqrt(var1))
+  var0<-(sqrt(var0)*sd.mult)^2
+
+  u.post.variables <- u.post.param(prior.beta = beta0,prior.var = var0,data.beta = beta1,data.var = var1) 
+  beta1.post<- u.post.variables[1,]
+  var1.post<- u.post.variables[2,]
+
+  BF.mu<- BF.mu.func(prior.mean =  0, posterior.mean = beta1.post,sd.prior = sqrt(var0) , sd.posterior = sqrt(var1.post),n = 100000 )
+  
+  PMP<- pi.0m.t.func(pi0 = pi0,BF.mu = BF.mu)
+  PMP
+}
+
+```
