@@ -413,7 +413,7 @@ __Inputs__
 
 PMP.func<- function(beta1, var1,pi0,beta0, sd.mult = 1){
   var0<- prior.var(beta1,sigma = sqrt(var1))
-  var0<-(sqrt(var0)*sd.mult)^2
+  var0<-var0*sd.mult
 
   u.post.variables <- u.post.param(prior.beta = beta0,prior.var = var0,data.beta = beta1,data.var = var1) 
   beta1.post<- u.post.variables[1,]
@@ -426,3 +426,113 @@ PMP.func<- function(beta1, var1,pi0,beta0, sd.mult = 1){
 }
 
 ```
+
+### Testing the code : 
+
+I aim to reproduce the results in the Kuiper et al paper. They have used the following to produce a series of results: 
+
+Study | $\sigma$ | $\beta$ No effect | Small Effect | Mixed Effect 1 | Mixed Effect 2 | Mixed Effect 3 
+---|---|---|---|---|---|---
+1 | 0.029 | 0.007 | 0.045 | 0.055 | 0.068 | 0.009
+2 | 0.054 | 0.014 | 0.084 | -0.102 | -0.084 | -0.084
+3 | 0.093 | 0.078 | 0.175 | 0.153 | 0.175 | 0.175
+4 | 0.179 | 0.151 | 0.337 | 0.151 | 0.337 | 0.337 
+
+
+
+------
+
+Using these values I will run the function for the above and compare them to the results in the Kuiper et al paper.
+
+First I will check the prior variances: 
+
+```{r varcheck, echo = FALSE}
+beta0<- 0
+var1<- c(0.029,0.054,0.093,0.179)
+var1<- var1^2
+#No effect
+beta1<- c(0.007,0.014,0.078,0.151)
+NEvar0<- prior.var(beta1,sigma = sqrt(var1))
+
+#Small effect
+beta1<- c(0.045,-0.084,0.175,0.337)
+SEvar0<- prior.var(beta1,sigma = sqrt(var1))
+
+#Mixed Effect 1 
+beta1<- c(0.055,-0.102,0.153,0.151)
+ME1var0<- prior.var(beta1,sigma = sqrt(var1))
+
+### mixed effect 2 
+beta1<- c(0.068,-0.084,0.175,0.337)
+ME2var0<- prior.var(beta1,sigma = sqrt(var1))
+
+### mixed effect 3 
+beta1<- c(0.009,-0.084,0.175,0.337)
+ME3var0<- prior.var(beta1,sigma = sqrt(var1))
+
+```
+
+Study $\sigma^{2}_{0}$ |  No effect | Small Effect | Mixed Effect 1 | Mixed Effect 2 | Mixed Effect 3 
+---|---|---|---|---|---
+1 | `r NEvar0[1]` | `r SEvar0[1]` | `r ME1var0[1]` | `r ME2var0[1]` | `r ME3var0[1]` 
+2 | `r NEvar0[2]` | `r SEvar0[2]` | `r ME1var0[2]` | `r ME2var0[2]` | `r ME3var0[2]` 
+3 | `r NEvar0[3]` | `r SEvar0[3]` | `r ME1var0[3]` | `r ME2var0[3]` | `r ME3var0[3]`  
+4 | `r NEvar0[4]` | `r SEvar0[4]` | `r ME1var0[4]` | `r ME2var0[4]` | `r ME3var0[4]`
+
+
+
+```{r testdatasetup, echo = FALSE}
+##Sigma 
+# No effect page 76
+
+beta1<- c(0.007,0.014,0.078,0.151)
+
+NEhalf<- PMP.func(beta1,var1,pi0,beta0 = 0,0.5)[,4]
+NEone<- PMP.func(beta1,var1,pi0,beta0 = 0,1)[,4]
+NEtwo<- PMP.func(beta1,var1,pi0,beta0 = 0,2)[,4]
+
+# small effect
+
+beta1<- c(0.045,0.084,0.175,0.337)
+SEhalf<- PMP.func(beta1,var1,pi0,beta0 = 0,sd.mult = 0.5)[,4]
+SEone<- PMP.func(beta1,var1,pi0,beta0 = 0,sd.mult = 1)[,4]
+SEtwo<- PMP.func(beta1,var1,pi0,beta0 = 0,sd.mult = 2)[,4]
+
+# Mixed effect page 76
+beta1<- c(0.055,-0.102,0.153,0.151)
+ME1half<-PMP.func(beta1,var1,pi0,beta0 = 0,sd.mult = 0.5)[,4]
+ME1one<-PMP.func(beta1,var1,pi0,beta0 = 0,sd.mult = 1)[,4]
+ME1two<-PMP.func(beta1,var1,pi0,beta0 = 0,sd.mult = 2)[,4]
+
+### mixed effect 2 
+beta1<- c(0.068,-0.084,0.175,0.337)
+ME2half<-PMP.func(beta1,var1,pi0,beta0 = 0,sd.mult = 0.5)[,4]
+ME2one<-PMP.func(beta1,var1,pi0,beta0 = 0,sd.mult = 1)[,4]
+ME2two<-PMP.func(beta1,var1,pi0,beta0 = 0,sd.mult = 2)[,4]
+
+### mixed effect 3 
+beta1<- c(0.009,-0.084,0.175,0.337)
+ME3half<-PMP.func(beta1,var1,pi0,beta0 = 0,sd.mult = 0.5)[,4]
+ME3one<-PMP.func(beta1,var1,pi0,beta0 = 0,sd.mult = 1)[,4]
+ME3two<-PMP.func(beta1,var1,pi0,beta0 = 0,sd.mult = 2)[,4]
+
+
+
+```
+
+
+$H_{m}$ | $\sigma$ multiplier | No effect | Small Effect | Mixed Effect 1 | Mixed Effect 2 | Mixed Effect 3
+---|---|---|---|---|---|---
+$H_{0}$ | 0.5 | `r NEhalf[1]` | `r SEhalf[1]` | `r ME1half[1]` | `r ME2half[1]` | `r ME3half[1]`  
+$H_{>}$ | 0.5 | `r NEhalf[2]` | `r SEhalf[2]` | `r ME1half[2]` | `r ME2half[2]` | `r ME3half[2]`  
+$H_{<}$ | 0.5 | `r NEhalf[3]` | `r SEhalf[3]` | `r ME1half[3]` | `r ME2half[3]` | `r ME3half[3]` 
+---|---|---|---|---|---|---
+$H_{0}$ | 1 | `r NEone[1]` | `r SEone[1]` | `r ME1one[1]` | `r ME2one[1]` | `r ME3one[1]`  
+$H_{>}$ | 1 | `r NEone[2]` | `r SEone[2]` | `r ME1one[2]` | `r ME2one[2]` | `r ME3one[2]`  
+$H_{<}$ | 1 | `r NEone[3]` | `r SEone[3]` | `r ME1one[3]` | `r ME2one[3]` | `r ME3one[3]` 
+---|---|---|---|---|---|---
+$H_{0}$ | 2 | `r NEtwo[1]` | `r SEtwo[1]` | `r ME1two[1]` | `r ME2two[1]` | `r ME3two[1]`  
+$H_{>}$ | 2 | `r NEtwo[2]` | `r SEtwo[2]` | `r ME1two[2]` | `r ME2two[2]` | `r ME3two[2]`  
+$H_{<}$ | 2 | `r NEtwo[3]` | `r SEtwo[3]` | `r ME1two[3]` | `r ME2two[3]` | `r ME3two[3]` 
+
+
