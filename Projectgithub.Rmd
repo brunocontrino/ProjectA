@@ -535,4 +535,58 @@ $H_{0}$ | 2 | `r NEtwo[1]` | `r SEtwo[1]` | `r ME1two[1]` | `r ME2two[1]` | `r M
 $H_{>}$ | 2 | `r NEtwo[2]` | `r SEtwo[2]` | `r ME1two[2]` | `r ME2two[2]` | `r ME3two[2]`  
 $H_{<}$ | 2 | `r NEtwo[3]` | `r SEtwo[3]` | `r ME1two[3]` | `r ME2two[3]` | `r ME3two[3]` 
 
+## Visualisations
+
+This section does not compute anything else, it only visualises certain aspects of the pipeline. The plots require the package *ggplot2*. 
+
+```{r loadgg,message=FALSE,warning=FALSE}
+library(ggplot2)
+```
+
+### Plotting prior and observed confidence interavals 
+
+```{r confint}
+plot.prior.var<-function(beta,sigma,percent = 99){
+  n.studies<- length(beta)
+  
+  data<- matrix(0, ncol = 2 , nrow = n.studies)
+  y<- seq(0,1,length.out = 2*n.studies)
+  y1<-y[seq_along(y)%% 2 == 0]
+  y2<-y[seq_along(y)%% 2 != 0]
+  percent<- (percent / 100)
+  percent<- percent + (1-percent)/2
+  multiplier<- qnorm(percent)
+  # get min/max
+  data[,1]<- beta - sigma*multiplier
+  data[,2]<- beta + sigma*multiplier
+  bounds<- abs(data)
+  output <- apply(X = bounds,MARGIN = 1,max)
+  
+  X3<- 0 - output
+  X4 <-0 + output
+  
+  data<- data.frame(data,X3,X4, y1,y2,beta)
+  
+  p<- ggplot(data, aes(X1,y1))
+  p<-p+ geom_point(aes(X1,y1), shape = 124,size = 4) + geom_point(aes(X2,y1),shape = 124,size = 4) 
+  p<- p+ geom_vline(xintercept = 0,linetype = 2 )
+  p<- p + geom_segment(aes(x =X1, y = y1 , xend = X2, yend = y1))
+  p<-p+ geom_point(aes(X3,y2),col = "red" ,shape = 124,size = 4) + geom_point(aes(X4,y2), col = "red",shape = 124,size = 4) 
+  p<- p + geom_segment(aes(x =X3, y = y2 , xend = X4, yend = y2),col = "red")
+  p<- p + geom_point(aes(beta,y1))
+  p<- p+geom_text(aes(beta,y1,label = paste("beta" , "^",1,1:n.studies,"*", "'' %+-% '' ","*", round(multiplier,3),"*","sigma","^",1:4, sep = "")),parse = TRUE,nudge_y = -0.03)
+  p<- p+geom_text(aes(rep(0,4),y2,label = paste("beta" , "^",1:n.studies,"*", "'' %+-% '' ","*", round(multiplier,3),"*","sigma","^",1:4, sep = "")),parse = TRUE,nudge_y = -0.03)
+  p<- p + xlab(NULL) + ylab(NULL)
+  p<-p+ ggtitle("Prior variance credibility and observed variance confidence intervals")
+  p
+}
+```
+
+An example of the output of the *plot.prior.var* function is: 
+
+```{r exmplplot1}
+beta1<- c(0.068,-0.084,0.175,0.337)
+sig1<- c(0.029,0.054,0.093,0.179)
+plot.prior.var(beta1,sigma = sig1)
+```
 
