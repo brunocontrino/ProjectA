@@ -546,6 +546,8 @@ PMP.func<- function(beta1, var1,pi0,beta0, sd.mult = 1){
 
 I aim to reproduce the results in the Kuiper et al paper. They have used the following to produce a series of results: 
 
+####Table 1. Dummy data from Kuiper et al 
+
 Study | $\sigma$ | $\beta$ No effect | Small Effect | Mixed Effect 1 | Mixed Effect 2 | Mixed Effect 3 
 ---|---|---|---|---|---|---
 1 | 0.029 | 0.007 | 0.045 | 0.055 | 0.068 | 0.009
@@ -559,7 +561,9 @@ Study | $\sigma$ | $\beta$ No effect | Small Effect | Mixed Effect 1 | Mixed Eff
 
 Using these values I will run the function for the above and compare them to the results in the Kuiper et al paper.
 
-First I will check the prior variances: 
+First I will ensure the prior variances are the same as Kuiper et al:
+
+####Table 2. Prior variances for dummy data in Kuiper et al.
 
 ```{r varcheck, echo = FALSE}
 beta0<- 0
@@ -586,6 +590,7 @@ beta1<- c(0.009,-0.084,0.175,0.337)
 ME3var0<- prior.var(beta1,sigma = sqrt(var1))
 
 ```
+
 
 Study $\sigma^{2}_{0}$ |  No effect | Small Effect | Mixed Effect 1 | Mixed Effect 2 | Mixed Effect 3 
 ---|---|---|---|---|---
@@ -635,6 +640,7 @@ ME3two<-PMP.func(beta1,var1,pi0,beta0 = 0,sd.mult = 2)[,4]
 
 ```
 
+####Table 3. Table of results for dummy data in Kuiper et al. 
 
 $H_{m}$ | $\sigma$ multiplier | No effect | Small Effect | Mixed Effect 1 | Mixed Effect 2 | Mixed Effect 3
 ---|---|---|---|---|---|---
@@ -650,6 +656,10 @@ $H_{0}$ | 2 | `r NEtwo[1]` | `r SEtwo[1]` | `r ME1two[1]` | `r ME2two[1]` | `r M
 $H_{>}$ | 2 | `r NEtwo[2]` | `r SEtwo[2]` | `r ME1two[2]` | `r ME2two[2]` | `r ME3two[2]`  
 $H_{<}$ | 2 | `r NEtwo[3]` | `r SEtwo[3]` | `r ME1two[3]` | `r ME2two[3]` | `r ME3two[3]` 
 
+    
+All the results in both Table 2 and Table 3 are the same as Kuiper et al. 
+
+
 ## Visualisations
 
 This section does not compute anything else, it only visualises certain aspects of the pipeline. The plots require the package *ggplot2*. 
@@ -659,6 +669,11 @@ library(ggplot2)
 ```
 
 ### Plotting prior and observed confidence interavals 
+
+**plot.prior.var(beta,sigma,percent = 99)**
+
+This function plot all of the confidence and credibility intervals for a given percentage and a set of observed means and standard deviations.
+
 
 ```{r confint}
 plot.prior.var<-function(beta,sigma,percent = 99){
@@ -690,7 +705,7 @@ plot.prior.var<-function(beta,sigma,percent = 99){
   p<- p + geom_segment(aes(x =X3, y = y2 , xend = X4, yend = y2),col = "red")
   p<- p + geom_point(aes(beta,y1))
   p<- p+geom_text(aes(beta,y1,label = paste("beta" , "^",1,1:n.studies,"*", "'' %+-% '' ","*", round(multiplier,3),"*","sigma","^",11:14, sep = "")),parse = TRUE,nudge_y = -0.03)
-  p<- p+geom_text(aes(rep(0,4),y2,label = paste("beta" , "^",1:n.studies,"*", "'' %+-% '' ","*", round(multiplier,3),"*","sigma","^",1:4, sep = "")),parse = TRUE,nudge_y = -0.03)
+  p<- p+geom_text(aes(rep(0,4),y2,label = paste("beta" , "^",1:n.studies,"*", "'' %+-% '' ","*", round(multiplier,3),"*","sigma","^",1:4, sep = "")),parse = TRUE,nudge_y = -0.03,col = "red")
   p<- p + theme(axis.ticks.y = element_blank(), axis.text.y = element_blank())
   p<- p + xlab(NULL) + ylab(NULL)
   p<- p+ ggtitle("Prior Variance Selection")
@@ -708,4 +723,29 @@ plot.prior.var(beta1,sigma = sig1)
 
 ### Plotting posterior model probabilities:
 
+**base.pmp.plot(data,pi0 = rep(1/3,3))**
 
+To visualize the PMPs given by the pipeline I plot the lines given by the three hypotheses. This aims to show how the PMPs change depending on which studies are considered. 
+
+```{r plotres}
+
+base.pmp.plot<- function(data,pi0 = rep(1/3,3)){
+  n.studies <- ncol(data)
+  data<- cbind(pi0,data)
+  plot(x = 0:n.studies,y = data[1,], type = "l", ylim = c(0,1),col = "red", ylab = "Probability", xlab = "PMP",
+       main = "Plot of PMP probabilities and initial PrMP")
+  lines(0:n.studies,data[2,], col = "blue")
+  lines(0:n.studies,data[3,], col = "green")
+  legend("topleft", legend = c("H:0","H:>","H:<"), fill = c("red","blue","green"))
+}
+
+```
+
+```{r test}
+## Mixed effect 1 parameters
+beta1<- c(0.055,-0.102,0.153,0.151)
+var1<- c(0.029,0.054,0.093,0.179)
+
+ME1oneplot<-PMP.func(beta1,var1,pi0,beta0 = 0,sd.mult = 1)
+base.pmp.plot(ME1oneplot)
+```
