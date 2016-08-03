@@ -1,0 +1,228 @@
+---
+title: "Methods"
+author: "Bruno Contrino"
+date: "16 July 2016"
+output: pdf_document
+---
+
+## 1.0 Preliminaries
+
+__Definition__ 
+*Bayes rule*
+
+For a parameter $\theta$ given the data $y$, the joint probability can be written as a product of two densities, the prior distribution $p(\theta)$  and the sampling distribution $p(y | \theta )$ giving :
+
+$$
+p(\theta , y) = p(\theta)p(y| \theta))
+$$
+
+Using the property of conditional probability, one can calculate the posterior density: 
+
+$$
+p(\theta | y ) = \frac{p(\theta,y)}{p(y)} = \frac{p(\theta)p(y| \theta)}{p(y)}
+$$
+
+Where $p(y) = \int\limits_{\theta} p(\theta)p(y| \theta)d\theta$ is the normalizing constant. 
+
+__Definition__
+*Prior Distribution* 
+
+
+The prior distribution represents the information about an uncertain parameter $\mathbf{\theta}$ that is conditional with the probability distribution of new data to yield the posterior distribution, which in turn is used for future inferences and decisions involving $\theta$
+
+__Definition__
+*Posterior Probability* 
+
+$$
+p \left( \theta | y \right) \propto  \frac{\mathcal{L}(\theta | y)p(\theta)}{p(y)}
+$$
+
+__Definition__
+*Conjugate Prior* 
+
+If $\mathcal{ F }$ is a class of sampling distributions $p(y | \theta)$ and  $\mathcal{P}$ is a class of prior distributions for $\theta$, then the class $\mathcal{P}$ is conjugate for $\mathcal{F}$ if 
+
+$$
+p(\theta | y) \in \mathcal{P} \quad \forall \quad p( . | \theta)  \in  \mathcal{F} \quad and \quad p(.)
+$$
+
+The Definition is vague since if we choose $\mathcal{P}$ as the class of all distributions, then $\mathcal{P}$ is always conjugate regardless of the class of sampling distribution used. 
+
+__Definition__ 
+*Bayes Factor*
+
+A Bayes factor is the posterior odds divided by the prior odds. That is: 
+
+$$
+BF_{mm'} = \frac{ \mathcal{L} (\beta_{1} | y) p(\beta_{1} | H_{m})  /  p(\beta_{1} |  H_{m})} {\mathcal{L}(\beta_{1} | y) p(\beta_{1} | H_{m'})  /  p(\beta_{1} |  H_{m'} ) }
+$$
+
+
+The Bayes factor gives a summary of evidence, given the data, to one hypothesis in relation to another.  
+That is to say let $H_{m}$ and $H_{m'}$ be hypotheses one would like to compare, then the Bayes factor $BF_{mm'}$ represents the relative support of the hypothesis $H_{m}$ relative to $H_{m'}$. If $BF_{mm'} > 1$ then the data support $H_{m}$ more, the larger the value the greater the support for the hypothesis. Similarly if $BF_{mm'} < 1$ the data support the hypothesis $H_{m'}$ more and the smaller the value of $BF_{mm'}$ the stronger the evidence for $H_{m'}$ is.  
+
+## Method
+For our case, we will be dealing with a set of effect sizes __$\beta_{1}$__ and  __$\sigma^{2}$__
+Three hypotheses will be compared in this method: $H_{0}$ , $H_{>}$,  $H_{<}$ where: 
+
+$$
+\begin{aligned}
+H_{0} &= \textrm{No effect} \\
+H_{>} &= \textrm{Positive effect} \\
+H_{<} &= \textrm{Negative effect} \\
+\end{aligned}
+$$
+
+In most cases $H_{m}$ will be referring to the hypothesis $m \in \{0,<,> \}$ unless stated otherwise. 
+
+## Prior and Unconstrained prior set up 
+
+The goal is to compute the posterior model probabilities and therefore we must set up the prior distribution for $H_{m}$. This method will use a conjugate prior, due to out assumption that the likelihood of the parameter $\beta_{1}$ is approximately normal, the prior distribution will be normal and thus so will the posterior. 
+
+In order to calculate the prior of $H_{m}$ we must first define the prior distribution for $H_{m}$  in which there are no restrictions. This will be referred to as the unconstrained prior and will be of technical use for the method. 
+
+The unconstrained posterior is defined as:
+$$
+p(\beta_{1}) = \mathcal{N} \left( \beta_{0} , \sigma_{0}^{2} \right) 
+$$
+
+Resulting in the prior distribution for $\beta_{1}$ being:
+
+$$
+p\left( \beta_{1} | H_{m} \right) = p(\beta_{1}) \frac{\mathcal{I}}{\int\limits_{\infty}^{-\infty} p(\beta_{1}) \mathcal{I} d\beta_{1}}
+$$
+
+Where 
+$$
+\mathcal{I} =
+\begin{cases}
+    1, & \text{if parameter values are in accordance with the constraints given by } H_{m} \\
+    0, & \text{otherwise}
+\end{cases}
+$$
+
+Now we must specify the prior parameters $\beta_{0}$ and their respective $\sigma_{0}^{2}$. Setting $\beta_{0}$ is straightforward as we want to, a priori, have the same belief in $\beta_{1} > 0$ and $\beta_{1} < 0$ and therefore we set $\beta_{0} = 0$ in order to ensure that 50 % of the prior agrees with one hypothesis and the other 50% agrees with the other hypothesis.  
+
+Setting the value of $\sigma_{0}$ is more involved. The prior variance should be vague with the aim that it has little influence on the results but it mustn't be too vague else the null hypothesis will receive support even in cases where it is not true. This is called the Lindley paradox. (REFERENCE). 
+
+According to Berger et al , (POSSIBLE ADDITION HERE) basing the prior variances on the data avoids making them too vague. The method used by Kuiper et al to determine $\sigma_{0}^{2}$ is outlined as follows: 
+The method used by Kuiper et al is proposed by Klugkist, Laudy, and Hoijtink (2005) and is as follows:
+
+- Calculate the 99% confidence intervals of $\beta_{1}$ with their respective $\sigma_{1}^{2}$ 
+
+- Choose the bound which will maximize the difference from the prior mean, by setting $\beta_{0} = 0$ this will mean taking the bound furthest away from 0.
+
+- Use this to bound to set the prior variance by taking the the new bound as an upper or lower bound of a 99 % confidence interval around 0. 
+
+Using this outline we will calculate a $\sigma_{0}^{2}$ for each data point. 
+
+[INSERT EXAMPLE OF PLOT]
+ 
+## Posterior and Unconstrained posterior set up 
+
+As mentioned previously due to the normal distributions of the parameters and the prior distribution, the posterior is also normal. Similarly to the prior we will use the unconstrained posterior distribution which is defined by 
+
+$$
+\begin{split}
+p(\beta_{1}|y) =& \mathcal{L}(\beta_{1}| y)p(\beta_{1}) \\
+ \approx& \mathcal{N}(\hat{\beta_{1}},\hat{\sigma_{1}}^{2})
+ \end{split}
+$$ 
+For some $\hat{\beta_{1}},\hat{\sigma_{1}}^{2}$
+
+Because the conjugate prior and the posterior distributions are considered as a function of the parameter $\beta_{1}$ the likelihood is an exponential of a quadratic form in $\beta_{1}$.
+Thus the family of conjugate densities is $p(\beta_{1} = exp(A\beta_{1}^{2} + B\beta_{1} + C)$ which can be parametrised as:
+
+$$
+p(\beta_{1}) \propto \exp\left(- \frac{1}{2 \sigma_{0}^{2}} (\beta_1 - \beta_{0})^{2}\right)
+$$
+
+Where $\sigma_{0}^{2}, \beta_{0}$ are known from the previous section. 
+
+The conjugate prior implies that the posterior distribution for $beta_{1}$ is an exponential of quadratic form and therefore normal. In the posterior density all the variables except for $beta_{1}$ are considered constants, giving the conditional density: 
+
+$$
+p(\beta_{1} | y) \propto \left( -\frac{1}{2} \left[ \, \frac{(y - \beta_{1})^{2}}{\sigma^{2}} + \frac{(\beta_{1} - \beta_{0})^{2}}{\sigma^{2}_{0}} \right] \, \right)
+$$
+
+Which after some algebra gives: 
+
+$$
+p(\beta_{1} | y) \propto \exp  \left( - \frac{1}{2 \left(\frac{1}{\sigma_{0}^{2}} + \frac{1}{\sigma^{2}} \right)} \left(  \beta_{1}  - \frac{ \frac{1}{\sigma_{0} \beta_{0} } + \frac{1}{\sigma_{y}^{2}} \beta_{y}}{ \frac{1}{\sigma_{0}^{2}} + \frac{1}{\sigma^{2}} } \right) ^{2} \right) 
+$$
+
+Which gives:
+
+$$
+p(\beta_{1} | y) \propto \exp\left( - \frac{1}{2 \tilde{\sigma}^{2}} \left(  \beta_{1} - \tilde{\beta} \right )^{2} \right)
+$$
+
+Where  $\tilde{\beta} = \frac{ \frac{1}{\sigma_{0} \beta_{0} } + \frac{1}{\sigma_{y}^{2}} \beta_{y}}{ \frac{1}{\sigma_{0}^{2}} + \frac{1}{\sigma^{2}} }$ and $\tilde{\sigma}^{2} = \frac{1}{\frac{1}{\sigma_{0}^{2}} + \frac{1}{\sigma^{2}}}$
+
+Therefore $p(\beta_{1} | y ) = \mathcal{L} \left( \beta_{1} | y \right) p() \approx \mathcal{N} \left(\tilde{\beta} , \tilde{\sigma}^{2}  \right)$
+
+As seen mentioned earlier in this section
+
+## Bayes Factors
+
+Now we have the information needed to calculate the Bayes factors which will be used in our method. 
+First we will show the following result: 
+
+$$
+\begin{split}
+BF_{mm'} =& \frac{\mathcal{L}(\beta_{1} | y)p(\beta_{1}|H_{m}) / p(\beta_{1} | y, H_{m})}{\mathcal{L}(\beta_{1} | y)p(\beta_{1}|H_{m'}) / p(\beta_{1} | y, H_{m'})} \\
+ =& \frac{\frac{\mathcal{L}(\beta_{1} | y)p(\beta_{1}|H_{m}) / p(\beta_{1} | y, H_{m})}{\mathcal{L}(\beta_{1} | y)p(\beta_{y})/p(\beta_{1}|y)}}{\frac{\mathcal{L}(\beta_{1} | y)p(\beta_{1}|H_{m'}) / p(\beta_{1} | y, H_{m'})}{\mathcal{L}(\beta_{1} | y)p(\beta_{y})/p(\beta_{1}|y)}} \\
+ =& \frac{BF_{mu}}{BF_{m'u}}
+\end{split}
+$$
+
+Where $BF_{mu}$ is the Bayes factor of the hypothesis $H_{m}$ and the unconstrained hypothesis. 
+
+## Calculating $BF_{mu}$
+Sunkist et al (2005) calculate $BF_{mu} , m \in \{ >,<\}$  in the following way: 
+
+$$
+BF_{mu} = \frac{\mathcal{L}(y | \beta_{1}, H_{m})p(\beta_{1} | H_{m}) / p(\beta_{1} | y , H_{m})}{\mathcal{L}(y | \beta_{1}, H_{u})p(\beta_{1} | H_{u}) / p(\beta_{1} | y , H_{u})}
+$$
+Where $H_{u}$ is the unconstrained hypothesis. Because $H_{m}$ is nested in the unconstrained hypothesis we can choose parameter $\hat{\beta_{1}}$ such that it exists in both hypotheses therefore $\mathcal{L}(y|\hat{\beta_{1}},H_{m}) = \mathcal{L}(y|\hat{\beta_{1}},H_{u})$. Therefore: 
+
+$$
+BF_{mu} = \frac{p(\hat{\beta_{1}} | H_{m})/ p(\hat{\beta_{1}} | y, H_{m})}{p(\hat{\beta_{1}} | H_{u})/ p(\hat{\beta_{1}} | y, H_{u})}
+$$
+
+The model parameters have the same prior distributions to the unconstrained prior except for the truncation of the prior for the constraints imposed by $H_{m}$. Therefore we can say $p(\hat{\beta_{1}} | H_{m})  = c . p(\hat{\beta_{1}}| H_{u})$ and  $p(\hat{\beta_{1}} | y, H_{m})  = d . p(\hat{\beta_{1}}| y, H_{u})$. Where $\frac{1}{c}$ is the proportion of the unconstrained prior in agreement with $H_{m}$ and $\frac{1}{d}$   is the proportion of the unconstrained posterior in agreement with $H_{m}$. Therefore: 
+
+$$
+BF_{mu} = \frac{c . p(\hat{\beta_{1}} | H_{u}) / (d . p(\hat{\beta_{1}}|y, H_{u}) )}{ p(\hat{\beta_{1}} | H_{u}) / (p(\hat{\beta_{1}}|y, H_{u})} = \frac{c}{d}
+$$
+
+Computing the likelihoods can be difficult but by using the unconstrained prior and posterior distributions to our advantage we can compute the Bayes factors between two hypotheses quickly as we can estimate $c$ and $d$ by randomly sampling the unconstrained prior and posterior distributions. 
+
+For the null hypothesis case, $BF_{0u}$, the Savage-Dickey ratio (REFERENCE) gives us a way of calculating $BF_{0u}$.
+
+$$
+BF_{0u} = \frac{p(\beta_{1} = 0|y)}{p(\beta_{1} = 0) }
+$$
+
+Where we are only required to compute the unconstrained prior and posterior at $\beta_{1} = 0$. 
+
+## Posterior Model Probabilities
+
+We are now in a position to compute the posterior model probabilities (PMP) for a given hypothesis $H_{m}$. This is done as follows: 
+
+$$
+\pi^{1}_{m} = \frac{\pi^{0}_{m}BF_{mu}}{\pi^{0}_{0u}BF_{0u} + \pi^{0}_{<}BF_{<u} +\pi^{0}_{>}BF_{>u}}
+$$
+
+Where $\pi^{0}_{m}$ is the prior model probability (PrMP). This represents the level of belief for each hypothesis assigned by the researcher before having any observed data. The suggestion from Kuiper et al is to choose an uninformative PrMP and thus give each hypothesis equal probability therefore $\pi^{0}_{m} = \frac{1}{3}$ for $m \in { 0, >, < }$. In section ... we will show how changing these probabilities will affect the outcome of the analysis. 
+
+## Updating step
+
+The crux of this method is to update the posterior model probabilities giving a final set of posterior model probabilities for a set of observed parameters. The method we employ is to set the PMP values calculated from the first set of observed parameters as the prior model probabilities for the next set of observed parameters and do this untill the observed parameters are exhausted. The method is commutative as the order in which the observed parameters are calculated does not affect the final outcome.  
+
+# Bayes Safety Factor (BS factor)
+
+The Bayes Safetey factor (BS factor) is defined by the boundary values for which the prior model probabilities will be in order to change the result of a given analysis. For example let some data $\mathcal{D}$ give a final posterior model probability of 0.99 to the hypothesis $H_{>}$ when the method is run with equal prior model probabilities, the BS factor would be the values for which the prior model probability of the hypothesis $H_{0}$ can be increased until the final PMP value for the hypothesis $H_{>}$ crosses a threshold such that we are no longer inclined to accept this hypothesis. 
+
+This gives us a measure on how sceptical one can be about a result of the analysis by increasing the probability that another hypothesis is true prior to the analysis, giving us an idea of how sensitive the solution is to the prior model probabilities. 
+ 

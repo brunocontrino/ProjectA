@@ -1,0 +1,220 @@
+---
+title: "Data"
+author: "Bruno Contrino"
+date: "29 July 2016"
+output: pdf_document
+---
+
+The `BayesCombo` package was tested on two different series of experiments. The aim was to explore the versatility of the method and how well it worked. This section will describe the data in detail and give a brief description of the data processing which was implemented. The two data sets used are: 
+
+A pair of gene expression studies. These where chosen to attempt to validate the method comparing it to a standard meta analysis approach used on the same data.
+
+A series of data sets of mouse experiments testing the effects of cigarette smoke. These where chosen to use the package in order to combine heterogeneous studies and attempt to make some conclusions based on the data. 
+
+
+# Gene Expression data 
+
+The two studies used for the analysis where: 
+
+GEO Accession number | Title                                              
+------------------|----------------------------------------
+GSE53753 | Transforming growth factor beta-like stimulated clone 22 D4 promotes diabetic hyperglycemia and insulin resistance [abdominal fat]
+GSE53754 | Transforming growth factor beta-like stimulated clone 22 D4 promotes diabetic hyperglycemia and insulin resistance [skeletal muscle]
+
+These studies are created by the same authors, using the same experimental design, changing only the tissue tested. 
+
+The main intention of these studies is to test, using a mouse model, how silencing the following genes alters gene expression: 
+
+TSC22D4: Transforming Growth Factor beta-like Stimulated Clone
+
+LCN13: lipocalin 13 which has been reported to regulate insulin sensitivity and nutrient metabolism.[REF]
+
+The study design has 4 sets of 7 mice, a sham group , a TSC22D4-knockout group, a LCN13-knockout and a  TSC22D4-knockout + LCN13-knockout group
+
+These studies where chosen because of their similarity, both data sets are testing the same conditions but changing the gene expression for a different tissue and therefore are suitable to use a standard meta-analysis approach.
+
+We test the `BayesCombo` on a subset of the data and look at the differential expression between the sham and the TSC22D4-knockout group for both tissues and combine these using a standard meta-analysis method implemented by the `metafor` package using a random effects and a fixed effects model on the studies effect size values.  
+
+The studies used for this part of the project is somewhat arbitrary as the aim of using the package on this data is to attempt to validate it by comparing it with the standard meta-analysis. Therefore the results section regarding this experiment will focus on the physical outcomes of the analysis rather the possible meaning of the results.
+
+The smoking data set will aim to use the package in a manner which some conclusions could be made from the results. 
+
+## Brief description of data preparation and analysis
+
+As mentioned in previous sections, the analysis requires and effect size and a standard error per gene for these datasets. To get these, we utilsed the standard gene expression pipeline, using the `limma` package, as seen in GEO2R [REF]. Due to only testing one condition against the sham, the set up is straight forward, full code is available in the code appendix .. . The effect size was taken from the `$coefficients` section of the output and standard error was calculated by the following: 
+
+`SE = sqrt(fit2$s2.post) * fit2$stdev.unscaled`
+
+Please refer to appendix .. for more information. 
+
+# Smoking Dataset
+
+This data set is an extensive experiment which is testing the effects of smoke inhalation from two different types of cigarette smoke, a referee cigarette which is represents smoking a conventional cigarette and a prototype modified risk tobacco product which is produced by Phillip Morris. The experiment is extensive and many different aspects of the ice's health are measured. Here only a brief description of each data set within the experiment and how it was collected will be given but the experiment is described extensively by [REFERENCE] 
+
+The different data sets included in this experiment which have been used for the project are: 
+
+__Hematology__ 
+
+The samples of blood where collected using the Sysmex XT 2000i clinical blood analyzer. A minimum of 50 $\mu l$ of whole blood was taken from each mouse in the analysis. All sample where analyzed within 2 hours of collection. The following are the different parameters measured: 
+
+- Basophils (x10E3 cells/uL)
+- Eosinophils (x10E3 cells/uL)
+- Hematocrit (L/L)
+- Hemoglobin (g/L)
+- Lymphocytes (x10E3 cells/uL)
+- Monocytes (x10E3 cells/uL)
+- Neutrophils (x10E3 cells/uL)
+- Platelets (x10E3 cells/uL)
+- Red blood cells (x10E6 cells/uL)
+- White blood cells (x10E3 cells/uL)
+
+__Histology__ 
+
+The right and left lung lobes of 10 mice per exposure group and time point. Left lung lobes were used for morphometric and histopathological evaluation, while right lung lobes were stored as reserve tissue. Step serial sections are 4 $\mu m$ thick and the slides were digitized using an Aperio scanner.
+Five lung sections were selected for histopathological evaluation according to the following strategy:
+
+- Section 1: taken at approximately 450–600 $\mu m$  in front of section 2
+- Section 2: taken at approximately 450–600 $\mu m$ in front of section 3
+- Section 3: section generated through the left main bronchus with branching secondary bronchi
+visible
+- Section 4: taken at approximately 450–600 $\mu m$ behind section 3
+- Section 5: taken at approximately 450–600 $\mu m$ behind section 4
+This approach provided central and peripheral aspects of the lung parenchyma for histopathological investigation.
+
+Emphysema and fibrosis were evaluated histopathologically in a semi-quantitative manner using the following categorical scale for the histology of the various slices: 
+
+0 = no different from normal morphology.
+
+1 = minimally different from normal morphology.
+
+2 = some areas minimally different and some areas moderately altered compared with normal morphology.
+
+3 = moderately altered compared with normal morphology (both local severity and spread distribution).
+
+4 = some areas moderately different and some areas severely altered compared with normal morphology.
+
+5 = overall severe alteration compared with normal morphology (both local severity and spread distribution).
+
+
+
+__Lung Function__ 
+
+Measurements where taken from each group of animals 18 - 24h after the last exposure using the whole body plethymography methodology. The animals where anaesthesised and paralyzed and connected to a small animal ventilator in order to avoid interference from spontanous breathing. The following are the different parameters measured: 
+
+- Area in PV loops (Hysteresis)
+- Compliance (C)
+- Assistance (E)
+- FEV0.1
+- FEV0.1/FVC
+- FEV0.2
+- FEV0.2/FVC
+- FVC
+- Newtonian Resistance (Rn)
+- Quasi-static compliance (CST)
+- Quasi-static assistance (Est)
+- Resistance (R)
+- Salazar-Knowles Equation (K)
+- Tissue assistance (H)
+- Tissue hysteresis
+- Tissue resistance (G)
+- Vt end
+
+__Bronchoalveolar Lavage Fluid collection__
+
+Lavage was done on mice after the ribcade is removed to expose the lungs, once complete exsanguination was preformed on the mice. The parameters measured in this data set are: 
+
+- B-cells (x10E3)
+- BALF Oenophiles (x10E5)
+- BALF Lymphocytes (x10E5)
+- BALF Macro phages (x10E5)
+- BALF Necrophiliacs (x10E5)
+- BALF Total cells (x10E5)
+- BALF volume (ml)
+- CD11b (MFI versus isotope)
+- CD4+ cells (x10E3) 
+- CD54 (MFI versus isotope)
+- CD8+ cells (x10E3)
+- CD86 (MFI versus isotope)
+- Dendrite cells (x10E3)
+- MHCII (MFI versus isotope)
+- MMP activity (u/ml)
+
+
+For each set one parameter has been chosen. This is in order to avoid animal bias when we run the final posterior model probability analysis. The criteria for selecting an analysis used is somewhat loose: the studies which will be used have accepted papers indicating the effects of smoking on the measured variable. This is in order to give us the correct sign to the effect sizes calculated, which are then used in the analysis. 
+
+The parameters chosen from each set are the following: 
+
+__Hematology__ 
+
+The parameter used in the analysis is __Hemoglobin (g/L)__. 
+Many scientific papers report that smoking causes an increase in hemoglobin within the blood, [REFERENCES] this gives us a clear hypothesis to test:  Do the condition mice have a higher hemoglobin count than the sham. This will be done via a t-test and fitting a linear model using the `lm` function in R. 
+
+Regarding the general hypothesis which will be tested using the `BayesCombo` package, [REFERENCES] indicate that having a high hemoglobin count is negatively correlated with smoking. We consider the reduction as a detrimental effect on health and therefore, assuming that the effect size will be positive for the hemoglobin tests, the effect size will also be positive when used in the analysis and similary for the negative case the effect size will also be negative when used in the analysis. 
+
+__Histology__ 
+
+This data has been treated differently, as each mouse has a given histology at a given time point, the total score is calculated by multiplying the number of non NA rows by 5 which would indicate the worst possible score for that organism. The total actual score across all segments is then collected and tested per group. This is done with a binomial model using the `glm` functin and a standard linear model is applied to the column means. Both effect sizes will be tested, which will give an example of the method using effet sizes calculated using different methods. 
+
+__BALF__ 
+
+The parameter used in the analysis is __BALF Eosinophils (x10E5)__.
+
+A study by Mancini et al has suggested that Esinophil count is positively correlated with smoking. This study will be treated similarly to the hematology due to its similar relationship with smoking and negative effects on health. 
+
+__Lung Function__
+
+The measure __FEV0.2 / FVC__ will be compared, again using the t test and fitting a linear model on the data. 
+This is the proportion of the vital capacity of the mice that they are able to expire in the first 0.2 seconds of forced expiration. Most studies researching the effects of smoking regarding this type of ratio consider the FEV1 / FVC ratio which gives the proportion of the vital capacity compared to what an organism is able to expire in the first second of forced expiration.[REFERECES] find that the FEV1/ FVC ratio is lower in smokers than non smokers. The lowering results in a negative health effect compared to a normal mouse and therefore if the test gives a negative effect size, we will multiply the effect value by -1 in order to adjust the hypothesis to represent the outcome of the previous test in relation to our final hypothesis. 
+
+Two scenarios will be analysed, the short term effects of smoking which we define to be up to 3 months of smoke inhalation and the middle term effects, which will take results from 5-7 months of the experiments. 
+
+
+## Brief description of data preparation and analysis. 
+
+To prepare the data, the csv files are taken from the online repository [link] referenced in [REFERENCE] and some minor data handling is done, the full script with preparation and analysis is in appnedix .. . 
+
+A linear model is applied between the control (sham) and the condition (prototype modified tobacco product and reference cigarette) for the hematology, lung function and BALF data sets and the effect size and standard error is recorded. 
+
+The histology data is treated slightly differently because we can use different models to the data giving us different effect sizes. The reason to do this is essentially to test the method with a effect sizes from differing model types.
+
+
+# References 
+Lipocalin 13 regulation of glucose and lipid metabolism in obesity.
+Zhou Y, Rui L.
+
+Comprehensive systems biology analysis of a 7-month cigarette smoke inhalation study in C57BL/6 mice
+
+Sam Ansari, Karine Baumer, Stéphanie Boué, Sophie Dijon, Remi Dulize, Kim Ekroos, Ashraf Elamin, Clement Foong, Emmanuel Guedj, Julia Hoeng, Nikolai V. Ivanov, Subash Krishnan, Patrice Leroy, Florian Martin, Celine Merg, Michael J. Peck, Manuel C. Peitsch, Blaine Phillips, Walter K. Schlage, Thomas Schneider, Marja Talikka, Bjoern Titz, Patrick Vanscheeuwijck, Emilija Veljkovic, Terhi Vihervaara, Gregory Vuillaume & Ching Qing Woon
+
+Early effects of short-time cigarette smoking on the human lung: a study of bronchoalveolar lavage fluids. 
+Mancini NM, Béné MC, Gerard H, Chabot F, Faure G, Polu JM, Lesur O.
+
+Circulating endothelial microparticles involved in lung function decline in a rat exposed in cigarette smoke maybe from apoptotic pulmonary capillary endothelial cells
+
+Hua Liu, Liang Ding, Yanju Zhang, and Songshi Ni
+
+Increased neutrophil migration in smokers with or without chronic obstructive pulmonary disease.
+Blidberg K, Palmberg L, Dahlén B, Lantz AS, Larsson K.
+
+Cigarette Smoking and Platelet Aggregation
+M. F. Glynn, J. F. Mustard, M. R. Buchanan, and E. A. Murphy
+
+Blood eosinophil and monocyte counts are related to smoking and lung function.
+Jensen EJ, Pedersen B, Narvestadt E, Dahl R.
+
+Blood haemoglobin concentrations are higher in smokers and heavy alcohol consumers than in non-smokers and abstainers: should we adjust the reference range?
+Milman N, Pedersen AN.
+
+
+Effects of cigarette smoke, nicotine and cotinine on red blood cell hemolysis and their -SH capacity
+S Asgary, PhD, GH Naderi, PhD, and A Ghannady, PhD
+
+The effect of cigarette smoking on hemoglobin levels and anemia screening.
+Nordenberg D, Yip R, Binkin NJ.
+
+Histological and biochemical effects of cigarette smoke on lungs.
+Ozan E, Kükner A, Canpolat L, Oner H, Gezen MR, Yilmaz S, Ozan S.
+
+Respiratory effects of tobacco smoking among young adults.
+Vianna EO, Gutierrez MR, Barbieri MA, Caldeira RD, Bettiol H, Da Silva AA.
+

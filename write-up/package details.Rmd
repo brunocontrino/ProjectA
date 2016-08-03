@@ -1,0 +1,13 @@
+---
+title: "about package"
+author: "Bruno Contrino"
+date: "30 July 2016"
+output: html_document
+---
+
+The package `BayesCombo` was developed to carry out the method explained in the methods section. This package is uses the S3 Class and consists of 13 functions of which 7 are user functions. The main function of the package is the `calculate.PMP` which follows the methods section for calculating the posterior model probabilities. The `BSfactor` function calculates the Bayes Safety factor as described in the methods section. There is one customised plotting function which is called PMP.plot.
+The rest of the user functions are methods and these are `plot.BFcombo` , `plot.BSfactor` , `summary.BFcombo` and `summary.BSfactor`. Full documentation is available from CRAN and in appendix .. . 
+
+This package based heavily on the Kuiper et al paper, with some extra additions. An obvious starting point for validating the package and its functions was to reproduce all of the results in the paper which test a series of examples as well as some, albeit relatively brief, sensitivity tests. This has been done successfully and a full explanation of the results is available both from the paper and from the extended package vignette in appendix ... . 
+
+The package is used throughout the results section and full scripts to carry out the analysis are available in the appropriate appendices. 
